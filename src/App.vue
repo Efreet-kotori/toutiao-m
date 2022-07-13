@@ -1,8 +1,7 @@
 <template>
   <div>
-    <h1>heim</h1>
-    <span class="toutiao toutiao-yanzhengma"></span><br />
-    <div class="login" >登录</div>
+    <!-- 一级路由出口 -->
+    <router-view></router-view>
   </div>
 </template>
 
@@ -14,12 +13,4 @@ export default {
 }
 </script>
 
-<style scoped>
-.login {
-  width: 347px;
-  height: 44px;
-  border-radius: 10px;
-  background-color: skyblue;
-  text-align: center;
-}
-</style>
+<style scoped></style>
