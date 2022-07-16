@@ -2,7 +2,7 @@
   <div>
     <router-view></router-view>
 
-    <van-tabbar route="true">
+    <van-tabbar route>
       <van-tabbar-item to="/ ">
         <template #icon>
           <span class="toutiao toutiao-shouye"></span>
@@ -25,7 +25,7 @@
         <template #icon>
           <span class="toutiao toutiao-wode"></span>
         </template>
-        <span>我的</span>
+        <span>{{ !!$store.state.user.token ? '我的 ' : '未登录' }}</span>
       </van-tabbar-item>
     </van-tabbar>
   </div>
