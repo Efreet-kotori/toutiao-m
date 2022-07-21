@@ -5,7 +5,7 @@
       <van-search
         v-model="keywords"
         show-action
-        background="skyblue"
+        background="#3296fa"
         placeholder="请输入搜索关键词"
         @search="onSearch"
         @cancel="backToPrePage"
@@ -16,7 +16,13 @@
     <!-- <SearchHistory />
     <SearchResult />
     <SearchSuggestion /> -->
-    <component :is="componentName" :keywords="keywords"></component>
+    <component
+      :is="componentName"
+      :keywords="keywords"
+      :arr="arr"
+      @delList="delList"
+      @goResults="goResults"
+    ></component>
   </div>
 </template>
 
@@ -33,7 +39,8 @@ export default {
   data () {
     return {
       keywords: '',
-      isShowSearchResults: false
+      isShowSearchResults: false,
+      arr: []
     }
   },
   computed: {
@@ -47,19 +54,48 @@ export default {
       return 'SearchSuggestion'
     }
   },
+  created () {
+    const data = localStorage.getItem('HEIMA_TOUTIAO_HISTORY')
+    if (data) {
+      this.arr.push(...JSON.parse(data))
+    }
+  },
   methods: {
     onSearch (val) {
+      if (this.arr.indexOf(this.keywords)) {
+        this.arr.push(this.keywords)
+        const data = JSON.stringify(this.arr)
+        localStorage.setItem('HEIMA_TOUTIAO_HISTORY', data)
+      }
       this.isShowSearchResults = true
-      this.$toast(val)
     },
     backToPrePage () {
       this.$router.back()
     },
     visibleSearchSuggestion () {
       this.isShowSearchResults = false
+    },
+    delList (i) {
+      if (i.isTrusted) {
+        this.arr = []
+      } else {
+        this.arr = this.arr.filter((item) => {
+          return item !== i
+        })
+      }
+      const data = JSON.stringify(this.arr)
+      localStorage.setItem('HEIMA_TOUTIAO_HISTORY', data)
+    },
+    goResults (item) {
+      this.keywords = item
+      this.onSearch()
     }
   }
 }
 </script>
 
-<style></style>
+<style lang="less" scoped>
+.van-search__action {
+  color: #fff;
+}
+</style>

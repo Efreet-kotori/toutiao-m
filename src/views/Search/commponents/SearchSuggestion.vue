@@ -1,6 +1,11 @@
 <template>
   <div>
-    <van-cell v-for="(item, index) in highlightDate" :key="index" icon="search">
+    <van-cell
+      v-for="(item, index) in highlightDate"
+      :key="index"
+      icon="search"
+      @click="goResults(searchList[index])"
+    >
       <template #title>
         <span v-html="item"></span>
       </template>
@@ -42,12 +47,15 @@ export default {
           this.searchList = []
           this.$toast.fail('搜索建议暂无')
         } else {
-          this.searchList = data.data.options.filters(Boolean)
+          this.searchList = data.data.options
         }
         // console.log(this.searchList)
       } catch (error) {
         this.$toast.fail('请输入正确的搜索内容')
       }
+    },
+    goResults (item) {
+      this.$emit('goResults', item)
     }
   },
   computed: {
