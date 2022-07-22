@@ -63,7 +63,7 @@ export default {
   methods: {
     onSearch (val) {
       if (this.arr.indexOf(this.keywords)) {
-        this.arr.push(this.keywords)
+        this.arr.unshift(this.keywords)
         const data = JSON.stringify(this.arr)
         localStorage.setItem('HEIMA_TOUTIAO_HISTORY', data)
       }

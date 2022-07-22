@@ -35,3 +35,20 @@ export const getUserInfo = () => {
     }
   })
 }
+
+export const getUser = () => {
+  return request({
+    url: '/v1_0/user/profile',
+    headers: {
+      Authorization: `Bearer ${store.state.user.token}`
+    }
+  })
+}
+
+export const recomposesUser = (id, realName, name, gender, birthday, intro) => {
+  return request({
+    url: '/v1_0/user/photo',
+    method: 'PATCH',
+    data: { id, realName, name, gender, birthday, intro }
+  })
+}
