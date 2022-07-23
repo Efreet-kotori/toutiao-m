@@ -5,6 +5,7 @@
       v-if="articleInfo.cover.type === 0"
       :title="articleInfo.title"
       :label="articleDesc"
+      @click="toArticleDetail(articleInfo.art_id)"
     />
 
     <!-- 渲染一张图片 -->
@@ -12,6 +13,7 @@
       v-if="articleInfo.cover.type === 1"
       :title="articleInfo.title"
       :label="articleDesc"
+      @click="toArticleDetail(articleInfo.art_id)"
     >
       <van-image
         width="3rem"
@@ -21,7 +23,11 @@
     </van-cell>
 
     <!-- 渲染三张图片 -->
-    <van-cell v-if="articleInfo.cover.type === 3" :title="articleInfo.title">
+    <van-cell
+      v-if="articleInfo.cover.type === 3"
+      :title="articleInfo.title"
+      @click="toArticleDetail(articleInfo.art_id)"
+    >
       <template #label>
         <div>
           <van-image
@@ -52,6 +58,14 @@ export default {
       const art = this.articleInfo
       const time = dayjs(art.pubdate).fromNow()
       return `${art.aut_name} ${art.comm_count}评论 ${time}`
+    }
+  },
+  methods: {
+    // 点击跳转到新闻详情
+    toArticleDetail (id) {
+      // console.log(111)
+      this.$router.push('/detail')
+      this.$store.commit('setCurrentArticleId', id)
     }
   }
 }

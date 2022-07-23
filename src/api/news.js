@@ -1,16 +1,60 @@
 import request from '@/utils/request'
+
 /**
  *
- * @param {*} channelId 频道id
- * @param {*} timestamp 获取第一页文章
- * @returns
+ * @param {*} channel_id 频道id
+ * @param {*} timestamp 获取第一页文章的时间戳
+ * @returns Promise
  */
-export const getArticleList = (channelId, timestamp) => {
+
+export const getAriticleList = (id, timestamp) => {
   return request({
     url: '/v1_0/articles',
     params: {
-      channel_id: channelId,
+      channel_id: id,
       timestamp
     }
+  })
+}
+
+export const getArticleDetail = (articleId) => {
+  return request({
+    url: `/v1_0/articles/${articleId}`
+  })
+}
+
+// 文章点赞
+export const likings = (target) => {
+  return request({
+    url: '/v1_0/article/likings',
+    method: 'POST',
+    data: {
+      target
+    }
+  })
+}
+// 取消文章点赞
+export const nolikings = (target) => {
+  return request({
+    url: `/v1_0/article/likings/${target}`,
+    method: 'DELETE'
+  })
+}
+
+// 文章收藏
+export const collections = (target) => {
+  return request({
+    url: '/v1_0/article/collections',
+    method: 'POST',
+    data: {
+      target
+    }
+  })
+}
+// 取消文章收藏
+export const delcollections = (target) => {
+  return request({
+    url: `/v1_0/article/collections/${target}`,
+    method: 'DELETE'
   })
 }
