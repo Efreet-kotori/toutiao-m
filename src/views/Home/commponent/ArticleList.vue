@@ -6,20 +6,21 @@
       success-text="刷新成功"
     >
       <van-list
-        v-model="loading"
+        offset="20"
         @load="loadNextPage"
-        :immediate-check="false"
-        :finished="finished"
-        finished-text="没有更多了"
+        v-model="loading"
+        :finished="isFinished"
+        finished-text="没有更多了~"
         :error.sync="error"
-        error-text="加载失败，请重新加载"
+        error-text="请求失败，点击重新加载"
       >
         <ArticleItem
           v-for="item in articles"
           :key="item.art_id"
           :articleInfo="item"
-        ></ArticleItem
-      ></van-list>
+          :id="item.art_id"
+        ></ArticleItem>
+      </van-list>
     </van-pull-refresh>
   </div>
 </template>
@@ -28,6 +29,9 @@
 import { getArticleList } from '@/api'
 import ArticleItem from './ArticleItem.vue'
 export default {
+  components: {
+    ArticleItem
+  },
   props: {
     id: {
       type: [String, Number],
@@ -36,16 +40,13 @@ export default {
   },
   data () {
     return {
-      loading: false,
-      finished: false,
-      error: false,
-      refreshLoading: false,
       articles: [],
-      pre_timestamp: ''
+      pre_timestamp: '',
+      loading: false,
+      isFinished: false,
+      error: false,
+      refreshLoading: false
     }
-  },
-  components: {
-    ArticleItem
   },
   created () {
     this.getArticleList()
@@ -56,6 +57,7 @@ export default {
         const { data } = await getArticleList(this.id, +new Date())
         this.articles = data.data.results
         this.pre_timestamp = data.data.pre_timestamp
+        console.log(this.articles)
       } catch (error) {
         const status = error.response.status
         if (status === 400) {
@@ -67,16 +69,19 @@ export default {
     },
     async loadNextPage () {
       try {
+        // if (Math.random() < 0.7) {
+        //   throw new Error('出错了')
+        // }
         const { data } = await getArticleList(this.id, this.pre_timestamp)
+        // console.log(data)
         if (!data.data.pre_timestamp) {
-          this.finished = true
+          this.isFinished = true
         }
         if (this.refreshLoading) {
           this.articles.unshift(...data.data.results)
         } else {
           this.articles.push(...data.data.results)
         }
-
         this.pre_timestamp = data.data.pre_timestamp
       } catch (error) {
         this.error = true

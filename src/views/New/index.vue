@@ -1,400 +1,303 @@
 <template>
-  <div>
-    <van-nav-bar title="黑马头条" left-arrow @click-left="backPrePage" fixed />
-    <div class="article-detail">
-      <h1 class="article-title">{{ articleDetail.title }}</h1>
-      <div class="user-info">
-        <!-- 作者信息 -->
-        <van-cell :icon="articleDetail.aut_photo">
-          <template #title>
-            <div class="user-name">
-              {{ articleDetail.aut_name }}
-            </div>
-            <div class="publish-date">
-              {{ articleDetail.pubdate }}
-            </div>
-          </template>
-          <!-- 使用 right-icon 插槽来自定义右侧图标 -->
-          <template #right-icon>
-            <van-button round type="info" @click="isFollow">
-              <template #icon v-if="!isFollowed">
-                <van-icon name="plus"></van-icon>
-              </template>
-              {{ isFollowed ? '取关' : '关注' }}
-            </van-button>
-          </template>
-        </van-cell>
-      </div>
-      <!-- 文章内容 -->
-      <div
-        id="article-content"
-        class="article-content markdown-body"
-        v-html="articleDetail.content"
-      ></div>
-      <!-- 正文结束 -->
-      <van-divider>正文结束</van-divider>
-      <!-- 评论 -->
-      <van-list
-        v-model="loading"
-        :finished="finished"
-        finished-text="没有更多了"
-        @load="commOnLoad"
-        :error.sync="error"
-        error-text="请求失败，点击重新加载"
-      >
-        <commItem
-          v-for="item in commList"
-          :key="item.com_id"
-          :comm="item"
-        ></commItem>
-      </van-list>
-
-      <!-- 底部栏 -->
-      <div class="article-bottom">
-        <van-button round size="mini" @click="show = true">写评论</van-button>
-        <van-popup v-model="show" position="bottom">
-          <van-field
-            v-model="comm"
-            rows="2"
-            autosize
-            type="textarea"
-            maxlength="50"
-            placeholder="请输入留言"
-            show-word-limit
-            @keyup.enter="publishFn"
-          />
-          <div class="publish">
-            <van-button :disabled="isDisabled" @click="publishFn"
-              >发布</van-button
-            >
-          </div>
-        </van-popup>
-        <van-icon name="comment-o" :badge="articleDetail.comm_count" />
-        <div @click="clickStar">
-          <van-icon name="star" color="#f5de19" v-if="isCollected" />
-          <van-icon name="star-o" v-else />
-        </div>
-        <div @click="clickGood">
-          <van-icon
-            name="good-job"
-            v-if="attitude === 1"
-            color="#f5de19"
-            :badge="articleDetail.like_count"
-          />
-          <van-icon
-            name="good-job-o"
-            v-else
-            :badge="articleDetail.like_count"
-          />
-        </div>
-        <van-icon name="share" />
-      </div>
+  <div class="container">
+    <Header title="黑马头条"></Header>
+    <h1 class="article-title">{{ articleInfo.title }}</h1>
+    <van-row class="article-user">
+      <van-col span="12">
+        <van-row class="user-row" type="flex">
+          <van-col>
+            <van-image
+              width="35"
+              height="35"
+              round
+              :src="articleInfo.aut_photo"
+            />
+          </van-col>
+          <van-col>
+            <van-row type="flex">
+              <van-col>{{ articleInfo.aut_name }}</van-col>
+              <van-col style="color: #b7b7b7">{{
+                dayjs(articleInfo.pubdate).fromNow()
+              }}</van-col>
+            </van-row>
+          </van-col>
+        </van-row>
+      </van-col>
+      <van-col span="12" style="text-align: right">
+        <van-button round type="info" class="btn" @click="followFn">{{
+          isFollow ? '已关注' : '+ 关注'
+        }}</van-button>
+      </van-col>
+    </van-row>
+    <div class="content">
+      <div v-html="articleInfo.content" class="text-area markdown-body"></div>
     </div>
+    <van-divider :hairline="false">正文结束</van-divider>
+
+    <!-- 底部标签栏 -->
+    <van-tabbar>
+      <van-tabbar-item class="btn-pl">
+        <template #icon>
+          <van-button
+            plain
+            round
+            hairline
+            type="info"
+            class="xie-pl"
+            @click="writeReview"
+            >写评论</van-button
+          >
+        </template>
+      </van-tabbar-item>
+      <van-tabbar-item
+        class="icon-size"
+        :badge="articleInfo.comm_count"
+        icon="comment-o"
+      ></van-tabbar-item>
+      <van-tabbar-item
+        class="icon-size"
+        icon="star-o"
+        v-if="!isCollected"
+        @click="collectFn"
+      ></van-tabbar-item>
+      <van-tabbar-item
+        class="icon-size"
+        icon="star"
+        style="color: rgb(50, 150, 250)"
+        v-if="isCollected"
+        @click="collectFn"
+      ></van-tabbar-item>
+      <van-tabbar-item
+        class="icon-size"
+        icon="good-job"
+        @click="thumbsFn"
+        v-if="isLike"
+        style="color: skyblue"
+      ></van-tabbar-item>
+      <van-tabbar-item
+        class="icon-size"
+        icon="good-job-o"
+        @click="thumbsFn"
+        v-else
+      ></van-tabbar-item>
+      <van-tabbar-item class="icon-size" icon="share-o"></van-tabbar-item>
+    </van-tabbar>
+    <!-- 弹出层 -->
+    <van-popup
+      v-model="popupShow"
+      position="bottom"
+      :style="{ height: '15%' }"
+      class="popup-box"
+    >
+      <!-- 弹出文本域 -->
+
+      <van-field
+        v-model="message"
+        rows="2"
+        autosize
+        type="textarea"
+        maxlength="50"
+        placeholder="请输入留言"
+        show-word-limit
+        class="popup-txt"
+      />
+      <van-button class="popup-btn" @click="sendMsg">发布</van-button>
+    </van-popup>
+    <CommentsLIst :artID="articleID" ref="commentslist"></CommentsLIst>
   </div>
 </template>
 
 <script>
-import {
-  getArticleDetail,
-  getComment,
-  followUser,
-  delfollowUser,
-  likings,
-  nolikings,
-  collections,
-  delcollections,
-  postComment
-} from '@/api'
 import dayjs from '@/utils/dayjs'
-import commItem from './components/commItem.vue'
-import { ImagePreview } from 'vant'
+import '@/assets/css/news.css'
+import Header from '@/components/Header.vue'
+import {
+  getArticleInfo,
+  thumbsUp,
+  unThumbsUp,
+  collected,
+  unCollected,
+  following,
+  unFollowing,
+  setArticleReply
+} from '@/api'
+import CommentsLIst from './components/CommentsLIst'
 export default {
-  components: {
-    commItem
-  },
   data () {
     return {
-      currentArticleId: this.$store.state.currentArticleId, // 当前文章的id
-      articleDetail: {}, // 文章详情
-      loading: false, // 触发评论加载事件
-      finished: false, // 数据是否加载结束
-      error: false, // 加载评论失败
-      commList: [], // 对文章的评论列表
-      show: false, // 写评论的弹出框是否弹出
-      comm: '', // 写评论中的评论内容
-      offset: '', // 当前页评论的last_id
-      end_id: '', // 所有评论数据的最后一个id
-      isFollowed: false, // 是否关注了该作者
-      isCollected: false, // 是否收藏了该文章
-      attitude: -1, // 用户对文章的态度 -1无态度 0不喜欢 1点赞
-      aut_id: '', // 文章作者id
-      imgList: []
+      articleInfo: {},
+      dayjs,
+      popupShow: false,
+      message: '',
+      articleID: this.$route.query.id,
+      isLike: false,
+      isCollected: false,
+      isFollow: false
     }
   },
-  computed: {
-    // 评论发布按钮的禁用状态
-    isDisabled () {
-      if (this.comm.length === 0) {
-        return true
-      } else {
-        return false
-      }
-    }
+  components: {
+    Header,
+    CommentsLIst
   },
-  async created () {
-    await this.getArticleDetail()
+  created () {
+    this.getArticleInfo()
   },
   methods: {
-    backPrePage () {
-      this.$router.back()
-    },
-    // 获取文章详情
-    async getArticleDetail () {
+    async getArticleInfo () {
       try {
-        // 请求文章详情的数据
-        const {
-          data: { data }
-        } = await getArticleDetail(this.currentArticleId)
+        const id = this.$route.query.id
+        const { data } = await getArticleInfo(id)
         // console.log(data)
-        this.articleDetail = data
-        // 处理显示文章发布时间
-        this.articleDetail.pubdate = dayjs(this.articleDetail.pubdate).fromNow()
-        // 是否关注了该作者
-        this.isFollowed = this.articleDetail.is_followed
-        // 是否收藏了该文章
-        this.isCollected = this.articleDetail.is_collected
-        // 用户对文章的态度
-        this.attitude = this.articleDetail.attitude
-        // 作者id
-        this.aut_id = this.articleDetail.aut_id
-        this.$nextTick(() => {
-          this.imgList = document
-            .getElementById('article-content')
-            .querySelectorAll('img')
-          const imgSrc = []
-          this.imgList.forEach((item, index) => {
-            imgSrc.push(item.src)
-            item.onclick = () => {
-              ImagePreview({
-                images: imgSrc,
-                startPosition: index,
-                closeable: true
-              })
-            }
-          })
-        })
+        this.articleInfo = data.data
+        this.likeCount = data.data.like_count
+        this.isCollected = data.data.is_collected
+        this.isFollow = data.data.is_followed
+        this.isLike = data.data.attitude === 1
       } catch (error) {
-        console.log(error.message)
+        console.log(error)
       }
     },
-    // 关注作者
-    async isFollow () {
-      // if(!isFollowed)  +关注
-      // if(isFollowed)  取消关注
-      try {
-        if (!this.isFollowed) {
-          await followUser(this.aut_id)
-          this.$toast.success('关注成功')
-        } else {
-          await delfollowUser(this.aut_id)
-          this.$toast('已取关')
-        }
-        this.isFollowed = !this.isFollowed
-      } catch (e) {
-        console.log(e.message)
-        this.$toast.fail('操作失败')
-      }
+    writeReview () {
+      this.popupShow = true
     },
-    // 加载评论
-    async commOnLoad () {
-      try {
-        const res = await getComment({
-          type: 'a', // 评论类型 文章
-          source: this.currentArticleId, // 文章id
-          offset: this.offset,
-          limit: 10
-        })
-        console.log(res)
-        if (res.data.data.end_id === res.data.data.last_id) {
-          this.finished = true
-        }
-        // 更新offset
-        this.offset = res.data.data.last_id || ''
-        this.commList.push(...res.data.data.results.filter(() => Boolean))
-        if (!res.data.data.last_id) {
-          this.finished = true
-        }
-      } catch (e) {
-        console.log(e.message)
-        this.error = true
-      } finally {
-        // 加载状态改为false
-        this.loading = false
-      }
+    // 对文章点赞
+    async thumbsUp () {
+      await thumbsUp(this.articleID)
     },
-    // 发布评论
-    async publishFn () {
-      try {
-        const res = await postComment({
-          target: this.currentArticleId,
-          content: this.comm
-        })
-        console.log(res)
-        this.comm = ''
-        this.show = false
-        // this.getArticleDetail()
-        // this.commOnLoad()
-        location.reload(true)
-      } catch (e) {
-        console.log(e.message)
+    // 对文章取消点赞
+    async unThumbsUp () {
+      await unThumbsUp(this.articleID)
+    },
+    thumbsFn () {
+      if (!this.isLike) {
+        this.thumbsUp()
+        this.isLike = true
+      } else {
+        this.unThumbsUp()
+        this.isLike = false
       }
     },
     // 收藏文章
-    async clickStar () {
+    async collectFn () {
       try {
         if (!this.isCollected) {
-          await collections(this.currentArticleId)
-          this.$toast.success('文章收藏成功')
+          await collected(this.articleID)
+          this.$toast('收藏文章成功')
+          this.isCollected = true
         } else {
-          await delcollections(this.currentArticleId)
-          this.$toast('已取消收藏文章')
+          await unCollected(this.articleID)
+          this.$toast('取消收藏文章成功')
+          this.isCollected = false
         }
-        this.isCollected = !this.isCollected
-      } catch (e) {
-        console.log(e)
-        this.$toast.fail('操作失败')
+      } catch (error) {
+        console.log(error)
       }
     },
-    // 给文章点赞
-    async clickGood () {
+    // 关注用户
+    async followFn () {
+      if (!this.isFollow) {
+        await following(this.articleInfo.aut_id)
+        this.isFollow = true
+        this.$toast('关注用户成功')
+      } else {
+        await unFollowing(this.articleInfo.aut_id)
+        this.isFollow = false
+        this.$toast('取消关注用户成功')
+      }
+    },
+    // 对文章进行评论
+    async sendMsg () {
       try {
-        if (this.attitude !== 1) {
-          await likings(this.currentArticleId)
-          this.attitude = 1
-        } else {
-          await nolikings(this.currentArticleId)
-          this.attitude = -1
-        }
-      } catch (e) {
-        console.log(e.message)
-        this.$toast.fail('操作失败')
+        const { data } = await setArticleReply(this.articleID, this.message)
+        console.log(data)
+        this.$refs.commentslist.getCommentsInit()
+        this.popupShow = false
+        this.message = ''
+      } catch (error) {
+        console.log(error)
       }
     }
   }
 }
 </script>
 
-<style lang="less" scoped>
-/deep/.van-nav-bar {
-  background-color: #3296fa;
-  .van-icon,
-  .van-nav-bar__title {
-    color: #fff;
+<style scoped lang="less">
+.container {
+  padding: 92px 32px 100px;
+}
+.article-title {
+  font-size: 38px;
+  padding: 50px 0px;
+  margin: 0;
+}
+.article-user {
+  height: 84px;
+  .user-row {
+    align-items: center;
+    .van-row {
+      flex-direction: column;
+      font-size: 14px;
+      justify-content: center;
+    }
+    > .van-col:first-child {
+      line-height: 42px;
+      .van-image {
+        margin-right: 20px;
+      }
+    }
+    > .van-col:last-child {
+      .van-col:first-child {
+        margin-bottom: 10px;
+      }
+    }
+  }
+  > .van-col:last-child {
+    line-height: 44px;
+    .btn {
+      width: 170px;
+      height: 60px;
+    }
   }
 }
-// 文章详情
-.article-detail {
-  margin-top: 98px;
-  margin-bottom: 94px;
-  // 文章标题
-  .article-title {
-    font-size: 0.53333rem;
-    padding: 0.66667rem 0.42667rem;
-    margin: 0;
-    color: #3a3a3a;
+.text-area {
+  margin: 55px 0;
+}
+.van-tabbar {
+  box-sizing: border-box;
+  padding: 0 32px;
+  .btn-pl {
+    flex: 3.2;
   }
-  .user-info {
-    // 图片
-    .van-cell__left-icon {
-      width: 0.93333rem;
-      height: 0.93333rem;
-      margin-right: 0.22667rem;
-      overflow: hidden;
-      border-radius: 50%;
-      .van-icon__image {
-        width: 100%;
-        height: 100%;
-      }
-    }
-    .van-cell__title {
-      // 作者名
-      .user-name {
-        font-size: 0.32rem;
-        color: #3a3a3a;
-      }
-      // 发布时间
-      .publish-date {
-        font-size: 0.30667rem;
-        color: #b7b7b7;
-      }
-    }
-    // 关注按钮
-    .van-button {
-      width: 2.26667rem;
-      height: 0.77333rem;
-      color: white;
-      background: rgb(50, 150, 250);
-      border-color: rgb(50, 150, 250);
-    }
+  .xie-pl {
+    width: 280px;
+    height: 46px;
+    color: #a7a7a7;
+    border: 0.02667rem solid #eee;
   }
-  // 文章内容
-  .article-content {
-    padding: 0.73333rem 0.42667rem;
+  /deep/.van-icon {
+    font-size: 36px;
   }
-  // 底部栏
-  .article-bottom {
-    height: 94px;
-    width: 100%;
-    position: fixed;
-    bottom: 0;
-    border-top: 0.01333rem solid #d8d8d8;
-    background-color: #fff;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    // 按钮  3.76re
-    .van-button {
-      width: 3.76rem;
-      font-size: 0.4rem;
-      .van-button__content {
-        color: #a7a7a7;
-      }
-    }
-    /deep/.van-popup {
-      padding: 0.42667rem 0 0.42667rem 0.42667rem;
-      display: flex;
-      align-items: center;
-      .van-cell {
-        padding: unset;
-      }
-      .van-field__value {
-        background-color: #f5f7f9;
-        padding: 0.26667rem 0.42667rem;
-      }
-      // 发布按钮
-      .publish {
-        height: 100%;
-        width: 2rem;
-        .van-button {
-          border: 0;
-          width: 2rem;
-          height: 100%;
-          border: 0;
-          padding: 0;
-          .van-button__content {
-            color: #6ba3d8;
-            font-size: 0.37333rem;
-            position: absolute;
-            left: 30px;
-            top: -10px;
-          }
-        }
-      }
-    }
-    .van-icon {
-      font-size: 0.53333rem;
-      color: rgb(119, 119, 119);
-    }
+}
+.popup-box {
+  display: flex;
+  align-items: center;
+  padding: 0.42667rem 0 0.42667rem 0.42667rem;
+  .popup-txt {
+    background-color: #f5f7f9;
+    box-sizing: border-box;
+    width: 78%;
+    padding: 0.26667rem 0.42667rem;
+    overflow: hidden;
+    color: #323233;
+    font-size: 0.37333rem;
+    line-height: 0.64rem;
+  }
+  .popup-btn {
+    border: none;
+    color: #6ba3d8;
+    line-height: 1.2;
+    text-align: center;
+    font-size: 0.37333rem;
   }
 }
 </style>

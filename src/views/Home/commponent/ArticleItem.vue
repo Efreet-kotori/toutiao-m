@@ -1,19 +1,17 @@
 <template>
-  <div>
-    <!-- 渲染无图片 -->
+  <div @click="clickFn()">
+    <!-- 渲染无图片的结构 -->
     <van-cell
-      v-if="articleInfo.cover.type === 0"
       :title="articleInfo.title"
       :label="articleDesc"
-      @click="toArticleDetail(articleInfo.art_id)"
+      v-if="articleInfo.cover.type === 0"
     />
 
-    <!-- 渲染一张图片 -->
+    <!-- 渲染一张图片的结构 -->
     <van-cell
-      v-if="articleInfo.cover.type === 1"
       :title="articleInfo.title"
+      v-if="articleInfo.cover.type === 1"
       :label="articleDesc"
-      @click="toArticleDetail(articleInfo.art_id)"
     >
       <van-image
         width="3rem"
@@ -22,23 +20,19 @@
       />
     </van-cell>
 
-    <!-- 渲染三张图片 -->
-    <van-cell
-      v-if="articleInfo.cover.type === 3"
-      :title="articleInfo.title"
-      @click="toArticleDetail(articleInfo.art_id)"
-    >
+    <!-- 渲染三张图片的结构 -->
+    <van-cell :title="articleInfo.title" v-if="articleInfo.cover.type === 3">
       <template #label>
         <div>
           <van-image
-            v-for="(item, index) in articleInfo.cover.images"
-            :key="index"
             width="3rem"
             height="2rem"
+            v-for="(item, index) in articleInfo.cover.images"
+            :key="index"
             :src="item"
           />
+          <span>{{ articleDesc }}</span>
         </div>
-        <span>{{ articleDesc }}</span>
       </template>
     </van-cell>
   </div>
@@ -51,6 +45,10 @@ export default {
     articleInfo: {
       type: Object,
       required: true
+    },
+    id: {
+      type: String,
+      required: true
     }
   },
   computed: {
@@ -61,11 +59,14 @@ export default {
     }
   },
   methods: {
-    // 点击跳转到新闻详情
-    toArticleDetail (id) {
-      // console.log(111)
-      this.$router.push('/detail')
-      this.$store.commit('setCurrentArticleId', id)
+    clickFn () {
+      // console.log(this.id)
+      this.$router.push({
+        path: '/detail',
+        query: {
+          id: this.id
+        }
+      })
     }
   }
 }

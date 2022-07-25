@@ -11,7 +11,8 @@
       </van-nav-bar>
     </div>
     <div>
-      <van-cell title="头像" is-link>
+      <input type="file" name="" id="" ref="file" hidden accept=".jpg,.png" />
+      <van-cell title="头像" is-link @click="$refs.file.click()">
         <template #default>
           <van-image round width="0.8rem" height="0.8rem" :src="user.photo" />
         </template>
@@ -71,6 +72,9 @@
         @confirm="confirm2"
       />
     </van-popup>
+    <van-popup v-model="show4">
+      <img :src="photo" alt="" />
+    </van-popup>
   </div>
 </template>
 
@@ -84,16 +88,27 @@ export default {
       show1: false,
       show2: false,
       show3: false,
+      show4: false,
       minDate: new Date(1920, 0, 1),
       maxDate: new Date(2030, 10, 1),
       currentDate: new Date(2021, 0, 17),
       columns: ['男', '女'],
       id: '',
-      message: ''
+      message: '',
+      photo: ''
     }
   },
   created () {
     this.getUser()
+  },
+  mounted () {
+    this.$refs.file.addEventListener('change', (e) => {
+      let file = e.target.files[0]
+      file = URL.createObjectURL(file)
+      this.photo = file
+      this.show4 = true
+      console.log(e)
+    })
   },
   methods: {
     backToPrePage () {

@@ -1,11 +1,12 @@
 import request from '@/utils/request'
-import store from '@/store'
+
 /**
- *登录
- * @param {*} mobile 手机号
- * @param {*} code 验证码
- * @returns Promise
+ * 登录
+ * @param {String} mobile 手机号
+ * @param {String} code 验证码
+ * @returns promise
  */
+
 export const login = (mobile, code) => {
   return request({
     url: '/v1_0/authorizations',
@@ -13,42 +14,62 @@ export const login = (mobile, code) => {
     data: { mobile, code }
   })
 }
+
 /**
- * 发送验证码
- * @param {*} mobile 手机号
- * @returns Promise
+ *
+ * @param {String} mobile 手机号
+ * @returns promise
  */
+
 export const sendCode = (mobile) => {
   return request({
     url: `/v1_0/sms/codes/${mobile}`
   })
 }
+
 /**
- *
- * @returns
+ *  获取用户信息
+ * @returns promise
  */
+
 export const getUserInfo = () => {
   return request({
-    url: '/v1_0/user',
-    headers: {
-      Authorization: `Bearer ${store.state.user.token}`
-    }
+    url: '/v1_0/user'
   })
 }
 
-export const getUser = () => {
-  return request({
-    url: '/v1_0/user/profile',
-    headers: {
-      Authorization: `Bearer ${store.state.user.token}`
-    }
-  })
-}
-
-export const recomposesUser = (id, realName, name, gender, birthday, intro) => {
+/**
+ * 上传图片
+ * @param {*} file 图片的FORM DATA
+ * @returns
+ */
+export const uploadPhoto = (file) => {
   return request({
     url: '/v1_0/user/photo',
     method: 'PATCH',
-    data: { id, realName, name, gender, birthday, intro }
+    data: file
+  })
+}
+
+/**
+ * 获取用户个人资料
+ * @returns promise
+ */
+export const getProfile = () => {
+  return request({
+    url: '/v1_0/user/profile'
+  })
+}
+
+/**
+ * 设置用户信息
+ * @param {*} info 对象的形式 name:昵称，gender:性别,birthday:生日,intro:个人介绍
+ * @returns
+ */
+export const setUserInfo = (info) => {
+  return request({
+    url: '/v1_0/user/profile',
+    method: 'PATCH',
+    data: info
   })
 }
